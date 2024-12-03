@@ -1,4 +1,5 @@
 import os
+import cosy_voice.voice_conversion
 
 from cozepy import Coze, TokenAuth, Message, ChatEventType, COZE_CN_BASE_URL
 
@@ -26,6 +27,7 @@ def start_chat_with_bot(coze_api_token, coze_api_base, bot_id, user_id, user_mes
         if event.event == ChatEventType.CONVERSATION_MESSAGE_DELTA:
             # Print the message content as it arrives
             print(event.message.content, end="", flush=True)
+            cosy_voice.voice_conversion.text_to_voice(event.message.content,"sk-317e606749294e5994cb605f07436c73")
 
         if event.event == ChatEventType.CONVERSATION_CHAT_COMPLETED:
             # When the conversation is completed, print token usage
@@ -37,11 +39,11 @@ def start_chat_with_bot(coze_api_token, coze_api_base, bot_id, user_id, user_mes
 if __name__ == "__main__":
     # Get access token and base URL from environment variables
     # coze_api_token = os.getenv("COZE_API_TOKEN")
-    coze_api_token = ""
+    coze_api_token = "pat_InVFA4FZqmvRRJZAtu7sN8fPzbLsKuzU3KOlBVSILP3QfOYgnGBfzd3LmrKLfuFQ"
     coze_api_base = os.getenv("COZE_API_BASE") or COZE_CN_BASE_URL
 
     # Bot and user information (replace with actual values)
-    bot_id = os.getenv("COZE_BOT_ID") or ""
+    bot_id = os.getenv("COZE_BOT_ID") or "7443811169217167399"
     user_id = "123"  # You can replace this with a custom user ID
     user_message = "讲个故事吧"
 
