@@ -1,9 +1,10 @@
+from venv import logger
 
 import dashscope
 from dashscope.audio.tts_v2 import SpeechSynthesizer
 
 
-def text_to_voice(text, api_key, model="cosyvoice-v1", voice="longxiaochun", output_file="output.mp3"):
+def text_to_voice(text, output_file):
     """
     将输入的文本转换为MP3音频文件。
 
@@ -17,21 +18,35 @@ def text_to_voice(text, api_key, model="cosyvoice-v1", voice="longxiaochun", out
     Returns:
         str: 本次语音合成的请求ID。
     """
+
+    model = "cosyvoice-v1"
+    voice = "longxiaochun"
+    api_key = ""
     dashscope.api_key = api_key
 
     synthesizer = SpeechSynthesizer(model=model, voice=voice)
-    audio = synthesizer.call(text)
 
-    request_id = synthesizer.get_last_request_id()
+    try:
+        # 调用语音合成API
+        print("text----->voice:", text)
+        if not text or not text.strip():
+            return
 
-    with open(output_file, 'wb') as f:
-        f.write(audio)
+        audio = synthesizer.call(text)
+        # 将音频数据写入文件
+        with open(output_file, 'wb') as f:
+            f.write(audio)
+        # logger.info('requestId: ', synthesizer.get_last_request_id())
+    except Exception as e:
+        logger.error(f"语音合成失败, 错误信息: {e}")
 
-    return request_id
+        # TODO 作为数据的回滚机制 ***
+        # 处理错误:后续添加故事包文件回滚机制,如果一个文件发生转换异常,为了保持文件数据的完整性
+        # 删除当前文件夹
+
 
 if __name__ == "__main__":
     # 将your-dashscope-api-key替换成您自己的API-KEY
-    api_key = ""
     text_to_convert = "今天天气怎么样呀？"
-    request_id = text_to_voice(text_to_convert, api_key)
+    request_id = text_to_voice(text_to_convert)
     print(f"语音合成请求ID: {request_id}")
