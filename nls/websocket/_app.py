@@ -173,7 +173,6 @@ class WebSocketApp:
         self.last_pong_tm = 0
         self.subprotocols = subprotocols
         self.callback_args = callback_args
-        self.has_teardown = False
 
     def update_args(self, *args):
         self.callback_args = args
@@ -294,9 +293,7 @@ class WebSocketApp:
                 If close_frame is set, the on_close handler is invoked
                 with the statusCode and reason from the provided frame.
             """
-            if self.has_teardown:
-                return
-            self.has_teardown = True
+
             if thread and thread.is_alive():
                 event.set()
                 thread.join()
