@@ -17,7 +17,7 @@ def start_chat_with_bot(user_message):
     """
     coze_api_token = os.getenv("COZE_API_TOKEN") or ""
     coze_api_base = os.getenv("COZE_API_BASE") or COZE_CN_BASE_URL
-    bot_id = os.getenv("COZE_BOT_ID") or "7443811169217167399"
+    bot_id = os.getenv("COZE_BOT_ID") or "7446395247313436681"
     user_id = "123"  # You can replace this with a custom user ID
 
 

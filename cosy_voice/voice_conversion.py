@@ -3,46 +3,99 @@ from venv import logger
 import dashscope
 from dashscope.audio.tts_v2 import SpeechSynthesizer
 
+import nls
+import time
+
+from cosy_voice.AliyunTokenGenerator import AliyunTokenGenerator
+
+# 设置打开日志输出
+nls.enableTrace(False)
+
+# 将音频保存进文件
+SAVE_TO_FILE = True
+# 将音频通过播放器实时播放，需要具有声卡。在服务器上运行请将此开关关闭
+PLAY_REALTIME_RESULT = True
+if PLAY_REALTIME_RESULT:
+    import pyaudio
+
 
 def text_to_voice(text, output_file):
-    """
-    将输入的文本转换为MP3音频文件。
+    if SAVE_TO_FILE:
+        file = open(output_file, "wb")
+    if PLAY_REALTIME_RESULT:
+        player = pyaudio.PyAudio()
+        stream = player.open(
+            format=pyaudio.paInt16, channels=1, rate=24000, output=True
+        )
 
-    Args:
-        text (str): 要转换为音频的文本内容。
-        api_key (str): DashScope的API密钥。
-        model (str, optional): 使用的语音合成模型，默认为"cosyvoice-v1"。
-        voice (str, optional): 语音类型，默认为"longxiaochun"。
-        output_file (str, optional): 输出的MP3文件路径，默认为"output.mp3"。
+        # 创建SDK实例
+        # 配置回调函数
 
-    Returns:
-        str: 本次语音合成的请求ID。
-    """
+    def on_data(data, *args):
+        if SAVE_TO_FILE:
+            file.write(data)
+        if PLAY_REALTIME_RESULT:
+            stream.write(data)
 
-    model = "cosyvoice-v1"
-    voice = "longxiaochun"
-    api_key = ""
-    dashscope.api_key = api_key
+    def on_message(message, *args):
+        print("on message=>{}".format(message))
 
-    synthesizer = SpeechSynthesizer(model=model, voice=voice)
+    def on_close(*args):
+        print("on_close: args=>{}".format(args))
 
+    def on_error(message, *args):
+        print("on_error message=>{} args=>{}".format(message, args))
+
+    ak = ""
+    aks = ""
+
+    # 初始化 AliyunTokenClient
+    client = AliyunTokenGenerator(access_key_id=ak, access_key_secret=aks)
+
+    # 获取 Token
     try:
-        # 调用语音合成API
-        print("text----->voice:", text)
-        if not text or not text.strip():
-            return
+        token_data = client.create_token()
+        print("Token:", token_data["token"])
+        print("Expire Time:", token_data["expireTime"])
+    except RuntimeError as e:
+        print("Error:", e)
 
-        audio = synthesizer.call(text)
-        # 将音频数据写入文件
-        with open(output_file, 'wb') as f:
-            f.write(audio)
-        # logger.info('requestId: ', synthesizer.get_last_request_id())
-    except Exception as e:
-        logger.error(f"语音合成失败, 错误信息: {e}")
+    sdk = nls.NlsStreamInputTtsSynthesizer(
+        # 由于目前阶段大模型音色只在北京地区服务可用，因此需要调整url到北京
+        url="wss://nls-gateway-cn-beijing.aliyuncs.com/ws/v1",
+        token=token_data["token"],
+        appkey="dB2VfKnIiLeJT9j7",
+        on_data=on_data,
+        on_sentence_begin=on_message,
+        on_sentence_synthesis=on_message,
+        on_sentence_end=on_message,
+        on_completed=on_message,
+        on_error=on_error,
+        on_close=on_close,
+        callback_args=[],
+    )
 
-        # TODO 作为数据的回滚机制 ***
-        # 处理错误:后续添加故事包文件回滚机制,如果一个文件发生转换异常,为了保持文件数据的完整性
-        # 删除当前文件夹
+    # 发送文本消息
+    sdk.startStreamInputTts(
+        voice="longmei",  # 语音合成说话人
+        aformat="wav",  # 合成音频格式
+        sample_rate=24000,  # 合成音频采样率
+        volume=50,  # 合成音频的音量
+        speech_rate=0,  # 合成音频语速
+        pitch_rate=0,  # 合成音频的音调
+    )
+    sdk.sendStreamInputTts(text)
+
+    # for text in test_text:
+    #     sdk.sendStreamInputTts(text)
+    #     time.sleep(0.05)
+    sdk.stopStreamInputTts()
+    if SAVE_TO_FILE:
+        file.close()
+    if PLAY_REALTIME_RESULT:
+        stream.stop_stream()
+        stream.close()
+        player.terminate()
 
 
 if __name__ == "__main__":

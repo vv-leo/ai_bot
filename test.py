@@ -84,7 +84,6 @@ if __name__ == "__main__":
     except RuntimeError as e:
         print("Error:", e)
 
-
     sdk = nls.NlsStreamInputTtsSynthesizer(
         # 由于目前阶段大模型音色只在北京地区服务可用，因此需要调整url到北京
         url="wss://nls-gateway-cn-beijing.aliyuncs.com/ws/v1",

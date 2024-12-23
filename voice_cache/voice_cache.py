@@ -38,5 +38,5 @@ def voice_cache(user_message):
 
 if __name__ == "__main__":
     # 将your-dashscope-api-key替换成您自己的API-KEY
-    text_to_convert = "帮我讲一个简短点的鬼故事"
+    text_to_convert = "帮我讲一个鬼故事字数在5000字以上"
     voice_cache(text_to_convert)
